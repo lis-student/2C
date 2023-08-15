@@ -1,0 +1,60 @@
+from selenium import webdriver
+from bs4 import BeautifulSoup
+import pandas as pd
+
+options = webdriver.ChromeOptions()
+options.add_argument('--ignore-certificate-errors')
+options.add_argument('--incognito')
+driver = webdriver.Chrome("/usr/lib/chromium-browser/chromedriver", options=options)
+
+# order = British , Canadian, US, Australia, New Zealand
+sites = ['https://www.bbc.co.uk/news/science-environment-56837908',
+         'https://www.abc.net.au/news/topic/climate-change',
+         'https://www.nzherald.co.nz/topic/climate-change/',
+         'https://www.cbc.ca/news/climate',
+         'https://edition.cnn.com/world/cnn-climate']
+classes = ['qa-heading-link lx-stream-post__header-link',
+           'GenericCard_link__Crwfx Link_link__nE06W ScreenReaderOnly_srLinkHint__83_S_ Link_showVisited__gmCxW Link_showFocus__0kDeK Link_underlineNone__W1VuH',
+           'story-card__heading__link',
+           'type-story',
+           'article']
+prefix = ['https://www.bbc.co.uk',
+          'https://www.abc.net.au',
+          '',
+          'https://www.cbc.ca/',
+          'https://edition.cnn.com/']
+valid_links = [[],
+               [],[],[],[]]
+texts = [[],
+         [],[],[],[]]
+
+#gets all links to articles from climate/ environment
+for country in range(5):
+    driver.get(sites[country])
+    page_source = driver.page_source
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    soup = BeautifulSoup(page_source, 'lxml')
+    if country< 3:
+        links = [node.get('href') for node in soup.find_all("a", class_=classes[country])]
+    elif country==3:
+        links = [node.get('href') for node in soup.find_all("a", {'data-cy' : classes[country]})]
+    else:
+        links = [node.get('href') for node in soup.find_all("a", {'data-link-type' : classes[country]})]
+    if country != 2:
+        links = [(prefix[country]+link) for link in links]
+    for link in links:
+       valid_links[country].append(link)
+
+
+
+for country in range(5):
+    for link in valid_links[country]:
+            driver.get(link)
+            page_source = driver.page_source
+            text = BeautifulSoup(page_source, "lxml").text
+            texts[country].append(text)
+            print(text)
+
+texts_by_country = [''.join(textss) for textss in texts]
+texts_by_country_dataframe = pd.Series(texts_by_country)
+texts_by_country_dataframe.to_csv('Text By Country.csv', index=False)
