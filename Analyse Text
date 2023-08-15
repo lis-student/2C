@@ -1,0 +1,61 @@
+import pandas as pd
+import nltk
+import matplotlib.pyplot as plt
+import numpy as np
+
+Texts_By_Country = pd.read_csv('Texts By Country.csv')
+Texts_By_Country = Texts_By_Country.squeeze()
+Texts_By_Country = Texts_By_Country.tolist()
+
+Indexes = ['Country', 'Size', 'Nouns', 'Verbs', 'Nouns/ Text', 'Verbs/ Text', 'Noun/ Verb', '% Believing in CC']
+
+data = [['British', 'Canadian', 'US', 'Australia', 'New Zealand'],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [0.81,0.75,0.65,0.72,0.72]]
+
+for country in range(5):
+        length = len(Texts_By_Country[country])
+        noun = 0
+        verbs = 0
+        data[1].append(str(length))
+        text = nltk.word_tokenize(Texts_By_Country[country].lower())
+        tagged_text = nltk.pos_tag(text)
+        for word in tagged_text:
+                if 'NN' in word[1]:
+                        noun+=1
+                elif 'V' in word[1]:
+                        verbs+=1
+        data[2].append(str(noun))
+        data[3].append(str(verbs))
+        data[4].append(str(noun/length))
+        data[5].append(str(verbs/length))
+        data[6].append(str(verbs/noun))
+
+
+data_frame = pd.DataFrame(data)
+data_frame = data_frame.transpose()
+data_frame= data_frame.astype({6: 'float', 7: 'float'})
+data[6] = [float(index) for index in data[6]]
+
+print(data[6],'\n',data[7])
+
+x = np.array(data[6])
+y = np.array(data[7])
+a, b = np.polyfit(x, y, 1)
+plt.scatter(x, y)
+plt.plot(x, a*x+b)
+for i in len(n):
+        plt.text(data[6][i],data[7][i],data[8][i])
+plt.xlabel("Verb to Noun Ratio")
+plt.ylabel("Public Belief in the Climate Emergency ")
+
+
+
+
+plt.show()
+
